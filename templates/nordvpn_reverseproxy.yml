@@ -1,0 +1,38 @@
+# https://github.com/bubuntux/nordvpn
+version: "3"
+services:
+  proxy:
+    image: traefik:v2.4 # Review traefik documentation https://doc.traefik.io/traefik/
+    container_name: traefik
+    command:
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - 80:80
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+  vpn:
+    image: ghcr.io/bubuntux/nordvpn
+    cap_add:
+      - NET_ADMIN # Required
+    environment: # Review https://github.com/bubuntux/nordvpn#environment-variables
+      - USER=user@email.com # Required
+      - "PASS=pas$word" # Required
+      - CONNECT=United_States
+      - TECHNOLOGY=NordLynx
+  torrent:
+    image: ghcr.io/linuxserver/qbittorrent
+    network_mode: service:vpn
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.torrent.loadbalancer.server.port=8080
+      - traefik.http.routers.torrent.rule=Host(`custom-host`)
+    depends_on:
+      - vpn
+# Make sure that custom-host resolves to the ip address of the server
+# for example /etc/hosts contains 127.0.0.1  custom-host
+# the torrent service would be available at http://custom-host
