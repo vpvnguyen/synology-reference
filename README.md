@@ -1,6 +1,39 @@
 # synology-reference
 
-Collection of guides, templates, and more
+Collection of guides, templates, and more...
+
+# Commands
+
+## Permissions
+
+```shell
+sudo chown -R admin:users /volume1/data /volume1/docker
+sudo chmod -R a=,a+rX,u+w,g+w /volume1/data /volume1/docker
+```
+
+```
+chown [OPTIONS] USER[:GROUP] FILE(s)
+```
+
+- [OPTIONS] – the command can be used with or without additional options.
+- [USER] – the username or the numeric user ID of the new owner of a file.
+- [:] – use the colon when changing a group of a file.
+- [GROUP] – changing the group ownership of a file is optional.
+- FILE – the target file.
+
+```
+chmod options permissions file name
+```
+
+## docker-compose
+
+`sudo docker-compose up -d` (This Docker-compose command helps builds the image, then creates and starts Docker containers. The containers are from the services specified in the compose file. If the containers are already running and you run docker-compose up, it recreates the container.)
+
+`sudo docker-compose pull` (Pulls an image associated with a service defined in a docker-compose.yml)
+
+`sudo docker-compose down` (The Docker-compose down command also stops Docker containers like the stop command does. But it goes the extra mile. Docker-compose down, doesn’t just stop the containers, it also removes them.)
+
+`sudo docker system prune -a --volumes --force` (Remove all unused containers, networks, images (both dangling and unreferenced), and optionally, volumes.)
 
 ## Sonarr
 
