@@ -1,0 +1,50 @@
+version: "3.5"
+services:
+  vpn:
+    container_name: vpn
+    image: dperson/openvpn-client
+    # cap_add, security_opt, and volume required for the image to function
+    cap_add:
+      - net_admin
+    environment: TZ=Europe/London
+    read_only: true
+    tmpfs:
+      - /run
+      - /tmp
+    restart: unless-stopped
+    security_opt:
+      - label:disable
+    stdin_open: true
+    tty: true
+    volumes:
+      - /dev/net:/dev/net:z
+      - ./vpn:/vpn
+    # You will need to change this, read https://github.com/dperson/openvpn-client
+    # -r is your CIDR network (I specify two to allow my other docker containers in)
+    # -f should be set to your VPN port, all other ports get firewalled
+    # -p is for port forwarding, so your torrent port forwards work.
+    command: "-r 192.168.1.0/24 -r 172.19.0.0/16 -f 1302 -p 23009"
+    # Since all the containers using the VPN share the same network interface
+    # Ports forwarded here reach the deluge container
+    ports:
+      - 58846:58846
+      - 8112:8112
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0 # Remove this if you don't want IPv6
+
+  deluge:
+    container_name: deluge
+    image: linuxserver/deluge
+    depends_on:
+      - vpn
+    network_mode: "service:vpn" # This is the magic line, use the vpn service for networking.
+    restart: unless-stopped
+    volumes:
+      - ./config:/config
+      - /path/to/Torrents:/Torrents
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - UMASK_SET=002
+      - DELUGE_LOGLEVEL=error
