@@ -1,0 +1,40 @@
+# qbittorrentvpn-firefox - place ovpn tcp file in /volume1/docker/qbittorrentvpn/config/openvpn/
+services:
+  qbittorrentvpn:
+    container_name: qbittorrentvpn
+    image: markusmcnugen/qbittorrentvpn
+    privileged: true
+    restart: unless-stopped
+    environment:
+      - VPN_USERNAME=${VPN_USER}
+      - VPN_PASSWORD=${VPN_PASS}
+      - PUID=${UID}
+      - PGID=${GID}
+      - WEBUI_PORT=${QBITTORRENTVPN_PORT_WEBUI:-8080}
+      - INCOMING_PORT=${QBITTORRENTVPN_PORT_INCOMING:-8999}
+      - VPN_ENABLED=yes
+      - LAN_NETWORK=${LOCAL_NETWORK_CIDR}
+      - NAME_SERVERS=${DNS_NAME_SERVERS}
+    ports:
+      - ${QBITTORRENTVPN_PORT_WEBUI:-8080}:${QBITTORRENTVPN_PORT_WEBUI:-8080}
+      - ${QBITTORRENTVPN_PORT_INCOMING:-8999}:${QBITTORRENTVPN_PORT_INCOMING:-8999}
+      - ${QBITTORRENTVPN_PORT_UDP_INCOMING:-8999}:${QBITTORRENTVPN_PORT_UDP_INCOMING:-8999}/udp
+      - ${FIREFOX_PORT_WEBUI:-5800}:5800
+    volumes:
+      - ${QBITTORRENTVPN_DIR_CONFIG}:rw
+      - ${QBITTORRENTVPN_DIR_SHARED}:rw
+
+  firefox:
+    container_name: firefox
+    image: jlesage/firefox
+    network_mode: service:qbittorrentvpn
+    depends_on:
+      - qbittorrentvpn
+    restart: unless-stopped
+    shm_size: 2gb
+    environment:
+      - USER_ID=${UID}
+      - GROUP_ID=${GID}
+      - TZ=${TZ:-America/Los_Angeles}
+    volumes:
+      - ${FIREFOX_DIR_DOCKER_CONFIG}:rw
