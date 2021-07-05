@@ -9,6 +9,8 @@
 #
 # Example Task 'user-defined script': 
 # bash /volume1/homes/admin/scripts/bash/plex/syno.plexupdate/syno.plexupdate.sh
+# 
+# Make sure EOL=LF
 
 # SCRIPT VERSION
 SPUScrpVer=3.0.2
