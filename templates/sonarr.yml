@@ -1,6 +1,20 @@
 # Sonarr - https://hotio.dev/containers/sonarr/
 # <mkdir /volume1/docker/appdata/sonarr>
-  sonarr:
+services:
+  sonarrDefault:
+    container_name: sonarr
+    image: hotio/sonarr
+    ports:
+      - "8989:8989"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ=Etc/UTC
+    volumes:
+      - /<host_folder_config>:/config
+
+  sonarrv2:
     container_name: sonarr
     image: ghcr.io/hotio/sonarr:nightly
     restart: unless-stopped
@@ -17,3 +31,18 @@
       - /etc/localtime:/etc/localtime:ro
       - ${DOCKERCONFDIR}/sonarr:/config
       - ${DOCKERSTORAGEDIR}:/data
+
+  sonarrLinuxServer:
+    image: ghcr.io/linuxserver/sonarr
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - /path/to/data:/config
+      - /path/to/tvseries:/tv #optional
+      - /path/to/downloadclient-downloads:/downloads #optional
+    ports:
+      - 8989:8989
+    restart: unless-stopped
