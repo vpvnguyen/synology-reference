@@ -1,0 +1,90 @@
+version: "3.4"
+services:
+  vpn:
+    container_name: vpn
+    image: dperson/openvpn-client:latest
+    cap_add:
+      - net_admin # required to modify network interfaces
+    restart: unless-stopped
+    volumes:
+      - /dev/net:/dev/net:z # tun device
+      - /var/lib/docker/volumes/vpn:/vpn # OpenVPN configuration
+    security_opt:
+      - label:disable
+    ports:
+      - 8112:8112 # port for deluge web UI to be reachable from local network
+    command: '-f "" -r 192.168.1.0/24' # enable firewall and route local network traffic
+
+  deluge:
+    container_name: deluge
+    image: linuxserver/deluge:latest
+    restart: unless-stopped
+    network_mode: service:vpn # run on the vpn network
+    environment:
+      - PUID=1000 # default user id, defined in .env
+      - PGID=1000 # default group id, defined in .env
+      - TZ=America/Los_Angeles # timezone, defined in .env
+    volumes:
+      - /mnt/shared/torrents:/downloads # downloads folder
+      - /var/lib/docker/volumes/deluge:/config # config files
+
+  jackett:
+    container_name: jackett
+    image: linuxserver/jackett:latest
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PUID=1000 # default user id, defined in .env
+      - PGID=1000 # default group id, defined in .env
+      - TZ=America/Los_Angeles # timezone, defined in .env
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /mnt/shared/torrents:/downloads # place where to put .torrent files for manual download
+      - /var/lib/docker/volumes/jackett:/config # config files
+
+  sonarr:
+    container_name: sonarr
+    image: linuxserver/sonarr:latest
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PUID=1000 # default user id, defined in .env
+      - PGID=1000 # default group id, defined in .env
+      - TZ=America/Los_Angeles # timezone, defined in .env
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/lib/docker/volumes/sonarr:/config # config files
+      - /mnt/shared/media/tv:/tv # tv shows folder
+      - /mnt/shared/torrents/tv:/downloads # download folder
+
+  radarr:
+    container_name: radarr
+    image: linuxserver/radarr:latest
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PUID=1000 # default user id, defined in .env
+      - PGID=1000 # default group id, defined in .env
+      - TZ=America/Los_Angeles # timezone, defined in .env
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/lib/docker/volumes/radarr:/config # config files
+      - /mnt/shared/media/movies:/movies # movies folder
+      - /mnt/shared/torrents/movies:/downloads # download folder
+
+  bazarr:
+    container_name: bazarr
+    image: linuxserver/bazarr
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PUID=1000 # default user id, defined in .env
+      - PGID=1000 # default group id, defined in .env
+      - TZ=America/Los_Angeles # timezone, defined in .env
+      - UMASK_SET=022 #optional
+    volumes:
+      - /var/lib/docker/volumes/bazarr:/config # config files
+      - /mnt/shared/media/movies:/movies # movies folder
+      - /mnt/shared/media/tv:/tv # tv shows folder
+    ports:
+      - 6767:6767
